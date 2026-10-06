@@ -1,0 +1,87 @@
+# Installed dependencies and downloadable development runtimes
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/cache/
+.yarn/unplugged/
+
+# Rebuildable Vite/TypeScript output and future desktop packaging output
+/dist/
+/dist-electron/
+/out/
+/release/
+/coverage/
+.vite/
+.cache/
+.parcel-cache/
+*.tsbuildinfo
+
+# Generated browser test results, caches and downloaded test browsers
+/test-results/
+/playwright-report/
+/blob-report/
+playwright/.cache/
+.playwright/
+ms-playwright/
+.local-browsers/
+.nyc_output/
+
+# Logs and disposable temporary files
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+/tmp/
+/temp/
+
+# OS metadata and local IDE caches
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/.browse.VC.db*
+.vscode/ipch/
+.history/
+
+# Local environment files; documented placeholder examples may be tracked
+.env
+.env.*
+!.env.example
+!.env.*.example
+.envrc
+
+# Authentication data, tool credentials, browser/session state and private keys
+auth.json
+auth.json.*
+credentials.json
+credentials.json.*
+.credentials/
+.secrets/
+.npmrc
+.netrc
+.git-credentials
+.ssh/
+.gnupg/
+.config/gh/
+.config/omnirush/
+.omnirush/
+storage-state.json
+storageState.json
+*.storage-state.json
+playwright/.auth/
+/browser-profile/
+/user-data/
+*.pem
+*.key
+*.p12
+*.pfx
+*.token
+*.secret
+*.credentials
+id_rsa*
+id_ed25519*
+
+# Source, procedural assets, tests, configs, docs and package-lock.json are kept.
