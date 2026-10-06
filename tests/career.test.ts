@@ -64,6 +64,14 @@ test('engine, efficiency and cargo upgrades change real simulation outcomes', ()
   assert.ok(b.mission!.cargo > a.mission!.cargo + 10);
 });
 
+test('career backups round-trip active progress and reject malformed imports without overwriting it', () => {
+  const source = career(); source.p.startMission(4); source.p.update(37); source.p.money = 1840; source.p.vehicle.reset(120, 88, 1.2); source.p.vehicle.fuel = 63; source.p.vehicle.health = 81; source.p.upgrades.engine = 2; source.p.save();
+  const backup = source.p.exportSave(); assert.match(backup, /"version": 2/);
+  const target = career(); target.p.money = 12; assert.equal(target.p.importSave(backup), true);
+  assert.equal(target.p.money, 1840); assert.equal(target.p.mission!.index, 4); assert.equal(target.p.mission!.elapsed, 37); assert.equal(target.p.vehicle.x, 120); assert.equal(target.p.vehicle.fuel, 63); assert.equal(target.p.vehicle.health, 81); assert.equal(target.p.upgrades.engine, 2);
+  assert.equal(target.p.importSave('{broken backup'), false); assert.equal(target.p.money, 1840); assert.equal(target.p.mission!.index, 4);
+});
+
 test('late and destroyed cargo still pays, while malformed quote inputs cannot poison the economy', () => {
   const quote = quoteDelivery(1, 10000, 0);
   assert.equal(quote.bonus, 0); assert.equal(quote.condition, 0); assert.ok(quote.total > 0);

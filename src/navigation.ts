@@ -1,10 +1,13 @@
 import { angleDelta, distance, type Point } from './math';
+import { findRoute } from './config';
 
 export function routeLength(route: Point[]) {
   let length = 0;
   for (let i = 1; i < route.length; i++) length += distance(route[i - 1].x, route[i - 1].z, route[i].x, route[i].z);
   return length;
 }
+
+export function roadDistance(start: Point, end: Point) { return routeLength(findRoute(start, end)); }
 
 export function navigationGuidance(route: Point[], position: Point, heading: number, destination: string) {
   const total = routeLength(route);

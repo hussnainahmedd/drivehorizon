@@ -152,6 +152,7 @@ The game pauses automatically when the window loses focus or the tab is hidden. 
 - Graphics, time of day, camera, speed units, audio level, look sensitivity, route guidance, camera shake, fullscreen and 30/60/120/uncapped render limits. Render limits do not alter 120 Hz physics.
 - Local autosave every eight driving seconds and on purchases, mission changes, pause, page exit and desktop close. Career, active cargo, vehicle location/resources, settings, upgrades, customer history and cycle time survive reloading. Version-one saves migrate in place using the original storage key. Corrupt data is retained under `harborline-save-recovery` before replacement; failed saves are reported in the interface.
 - Browser storage is per browser and origin; changing ports creates a separate save. Desktop saves use the stable local app origin under Electron's user-data directory. Browser and desktop profiles are separate. **New Career** starts fresh while preserving settings.
+- Career backups can be exported as local JSON from Settings and imported into another browser origin or a future desktop profile. Import replaces the current career only after confirmation; no backup is uploaded anywhere.
 
 ## Graphics and performance
 
@@ -235,7 +236,7 @@ The game uses a fixed-step accumulator. Physics, fuel, cargo clocks and career t
 npm run verify
 ```
 
-This checks application and test TypeScript, desktop-host syntax, the compiled build, all non-rendering tests, and production HTTP assets. It never starts a browser or creates a GPU context. The continuation report records **53/53 passing non-rendering tests** on 2026-10-05; rerun this command to check the current checkout.
+This checks application and test TypeScript, desktop-host syntax, the compiled build, all non-rendering tests, and production HTTP assets. It never starts a browser or creates a GPU context. The 2026-10-05 continuation report records **53/53** tests; the current follow-up adds career-backup, route-distance and settings coverage for **56/56 passing non-rendering tests**. Rerun this command to check the current checkout.
 
 ### Simulation, career, interface and host logic
 
@@ -292,7 +293,7 @@ No secret environment variables or `.env` file are required to develop or run th
 - The real-browser end-to-end suite, GPU restoration exercise and performance benchmarks need to run on a graphics-capable machine.
 - The Electron host is implemented, but native-window gameplay, fullscreen, offline operation and save/close/reopen behavior need real Windows and supported Ubuntu/Linux x64 validation.
 - Vehicle physics are planar bicycle dynamics with visual suspension; traffic follows rounded road routes. Longer human playtesting and handling, traffic, delivery-route and economy tuning remain.
-- Browser and desktop careers are separate profiles; explicit save export/import is not implemented and can be added if career transfer is needed. Browser origins/ports also have separate local saves.
+- Browser and desktop careers remain separate storage profiles by default, and browser origins/ports also have separate local saves. Use the Settings career-backup controls to transfer a saved career manually.
 - Desktop installer tooling/configuration, proper platform app icons, bundled license notices, clean-system checks and downloadable Windows/Linux binaries remain unfinished. Electron-builder is planned but is not currently installed or configured.
 - Actual supported Windows/Ubuntu versions, distribution formats and hardware requirements must be qualified before a future release. The proposed NSIS/AppImage/`.deb` strategy in `docs/DESKTOP.md` is a plan.
 

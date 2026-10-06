@@ -59,6 +59,16 @@ test('menus freeze physics, cargo, fuel and saved time; settings and frame limit
   } finally { env.close(); }
 });
 
+test('settings expose local career backup controls without mixing them into gameplay input', async () => {
+  const env = fixture();
+  try {
+    env.click('[data-action="start"]'); await Promise.resolve(); env.key('Escape'); env.key('Escape', false); env.click('[data-action="settings"]');
+    assert.ok(env.document.querySelector('[data-action="export-save"]'));
+    const input = env.document.querySelector<HTMLInputElement>('#save-file'); assert.ok(input); assert.match(input.accept, /json/);
+    let opened = 0; input.click = () => { opened++; }; env.click('[data-action="import-save"]'); assert.equal(opened, 1);
+  } finally { env.close(); }
+});
+
 test('workshop actions purchase repairs and upgrades only at the garage, with meaningful rank locks', async () => {
   const env = fixture();
   try {

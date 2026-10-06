@@ -5,7 +5,7 @@ import { FixedStepper, RenderCadence } from '../src/timing';
 import { signalState, signalSpeedLimit, followingSpeedLimit } from '../src/signals';
 import { Traffic } from '../src/traffic';
 import { DEFAULT_SETTINGS, DEPOT, DESTINATIONS, FUEL_STATION, GARAGE, findRoute, roadInfo } from '../src/config';
-import { navigationGuidance, mapProjection, routeLength } from '../src/navigation';
+import { navigationGuidance, mapProjection, roadDistance, routeLength } from '../src/navigation';
 import { cameraClearFraction } from '../src/camera';
 import { roadResetPosition } from '../src/recovery';
 import { VehiclePhysics } from '../src/physics';
@@ -71,6 +71,11 @@ test('navigation routes connect every customer and service without crossing buil
     for (let i = 1; i < route.length; i++) assert.ok(route[i].x === route[i - 1].x || route[i].z === route[i - 1].z);
   }
   assert.ok(routeLength(findRoute(DEPOT, DESTINATIONS[0])) < 135);
+});
+
+test('dispatch route distances use drivable roads rather than straight-line estimates', () => {
+  const direct = distance(DEPOT.x, DEPOT.z, DESTINATIONS[3].x, DESTINATIONS[3].z), routed = roadDistance(DEPOT, DESTINATIONS[3]);
+  assert.ok(routed >= direct); assert.equal(routed, routeLength(findRoute(DEPOT, DESTINATIONS[3]))); assert.ok(Number.isFinite(routed));
 });
 
 test('GPS handles real turns, reversal and arrival; map orientation agrees with left steering', () => {

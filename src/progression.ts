@@ -60,23 +60,37 @@ export class Progression {
     try { raw = this.storage?.getItem(KEY) ?? null; }
     catch { this.saveAvailable = false; this.loadWarning = 'unavailable'; return; }
     if (!raw) return;
+    const data = this.decodeSave(raw);
+    if (!data) { this.loadWarning = 'corrupt'; this.unreadableSave = raw; return; }
+    this.applySave(data);
+  }
+
+  private decodeSave(raw: string) {
     try {
       const data = record(JSON.parse(raw)), v = record(data.vehicle);
-      if ((data.version !== 1 && data.version !== 2) || typeof data.money !== 'number' || !Number.isFinite(data.money) || typeof v.x !== 'number' || !Number.isFinite(v.x) || typeof v.z !== 'number' || !Number.isFinite(v.z)) { this.loadWarning = 'corrupt'; this.unreadableSave = raw; return; }
-      this.money = finite(data.money, 350); this.completed = Math.floor(finite(data.completed, 0)); this.earnings = finite(data.earnings, 0);
-      this.settings = sanitizeSettings(data.settings);
-      vehicle.reset(finite(v.x, SPAWN.x, -280, 280), finite(v.z, SPAWN.z, -280, 280), finite(v.heading, 0, -1e6, 1e6));
-      vehicle.fuel = finite(v.fuel, 100, 0, 100); vehicle.health = finite(v.health, 100, 0, 100); vehicle.totalDistance = finite(data.distance, 0);
-      const m = record(data.mission), index = m.index;
-      if (typeof index === 'number' && Number.isInteger(index) && DESTINATIONS[index] && typeof m.elapsed === 'number' && Number.isFinite(m.elapsed) && typeof m.cargo === 'number' && Number.isFinite(m.cargo)) this.mission = { index, elapsed: finite(m.elapsed, 0), cargo: finite(m.cargo, 100, 0, 100), initialHealth: finite(m.initialHealth, vehicle.health, 0, 100) };
-      this.xp = finite(data.xp, this.completed * 90); this.worldHour = finite(data.worldHour, 16.8, 0, 24) % 24; this.drivingTime = finite(data.drivingTime, 0);
-      const upgrades = record(data.upgrades);
-      for (const id of Object.keys(UPGRADES) as UpgradeId[]) vehicle.upgrades[id] = Math.floor(finite(upgrades[id], 0, 0, 3));
-      if (Array.isArray(data.awards)) this.awards = MILESTONES.filter(milestone => (data.awards as unknown[]).includes(milestone.id)).map(milestone => milestone.id);
-      this.visits = DESTINATIONS.map((_, i) => Math.floor(finite(Array.isArray(data.visits) ? data.visits[i] : undefined, 0)));
-      this.bestTimes = DESTINATIONS.map((_, i) => { const time = Array.isArray(data.bestTimes) ? data.bestTimes[i] : undefined; return typeof time === 'number' && Number.isFinite(time) && time > 0 ? time : null; });
-      this.hasSave = data.started !== false;
-    } catch { this.loadWarning = 'corrupt'; this.unreadableSave = raw; }
+      if ((data.version !== 1 && data.version !== 2) || typeof data.money !== 'number' || !Number.isFinite(data.money) || typeof v.x !== 'number' || !Number.isFinite(v.x) || typeof v.z !== 'number' || !Number.isFinite(v.z)) return null;
+      return data;
+    } catch { return null; }
+  }
+
+  private applySave(data: Record<string, unknown>) {
+    const v = record(data.vehicle);
+    this.money = finite(data.money, 350); this.completed = Math.floor(finite(data.completed, 0)); this.earnings = finite(data.earnings, 0);
+    this.settings = sanitizeSettings(data.settings);
+    this.vehicle.reset(finite(v.x, SPAWN.x, -280, 280), finite(v.z, SPAWN.z, -280, 280), finite(v.heading, 0, -1e6, 1e6));
+    this.vehicle.fuel = finite(v.fuel, 100, 0, 100); this.vehicle.health = finite(v.health, 100, 0, 100); this.vehicle.totalDistance = finite(data.distance, 0);
+    const m = record(data.mission), index = m.index;
+    this.mission = null;
+    if (typeof index === 'number' && Number.isInteger(index) && DESTINATIONS[index] && typeof m.elapsed === 'number' && Number.isFinite(m.elapsed) && typeof m.cargo === 'number' && Number.isFinite(m.cargo)) this.mission = { index, elapsed: finite(m.elapsed, 0), cargo: finite(m.cargo, 100, 0, 100), initialHealth: finite(m.initialHealth, this.vehicle.health, 0, 100) };
+    this.xp = finite(data.xp, this.completed * 90); this.worldHour = finite(data.worldHour, 16.8, 0, 24) % 24; this.drivingTime = finite(data.drivingTime, 0);
+    const upgrades = record(data.upgrades);
+    for (const id of Object.keys(UPGRADES) as UpgradeId[]) this.vehicle.upgrades[id] = Math.floor(finite(upgrades[id], 0, 0, 3));
+    this.awards = Array.isArray(data.awards) ? MILESTONES.filter(milestone => (data.awards as unknown[]).includes(milestone.id)).map(milestone => milestone.id) : [];
+    this.visits = DESTINATIONS.map((_, i) => Math.floor(finite(Array.isArray(data.visits) ? data.visits[i] : undefined, 0)));
+    this.bestTimes = DESTINATIONS.map((_, i) => { const time = Array.isArray(data.bestTimes) ? data.bestTimes[i] : undefined; return typeof time === 'number' && Number.isFinite(time) && time > 0 ? time : null; });
+    this.hasSave = data.started !== false;
+    this.loadWarning = null;
+    this.unreadableSave = null;
   }
 
   get career() { return rankProgress(this.xp); }
@@ -158,10 +172,23 @@ export class Progression {
     this.vehicle.upgrades = { ...DEFAULT_UPGRADES }; this.vehicle.reset(); this.vehicle.fuel = this.vehicle.health = 100; this.vehicle.totalDistance = 0; this.save();
   }
 
+  exportSave() { return JSON.stringify(this.snapshot(), null, 2); }
+
+  importSave(raw: string) {
+    const data = this.decodeSave(raw);
+    if (!data) return false;
+    this.applySave(data); this.save(false); return true;
+  }
+
+  private snapshot(): SaveData {
+    const v = this.vehicle;
+    return { version: 2, started: this.hasSave, money: this.money, completed: this.completed, earnings: this.earnings, distance: v.totalDistance, mission: this.mission, vehicle: { x: v.x, z: v.z, heading: v.heading, fuel: v.fuel, health: v.health }, settings: this.settings, xp: this.xp, upgrades: this.upgrades, awards: this.awards, visits: this.visits, bestTimes: this.bestTimes, worldHour: this.worldHour, drivingTime: this.drivingTime };
+  }
+
   save(markStarted = true) {
     const v = this.vehicle;
     this.hasSave ||= markStarted;
-    const data: SaveData = { version: 2, started: this.hasSave, money: this.money, completed: this.completed, earnings: this.earnings, distance: v.totalDistance, mission: this.mission, vehicle: { x: v.x, z: v.z, heading: v.heading, fuel: v.fuel, health: v.health }, settings: this.settings, xp: this.xp, upgrades: this.upgrades, awards: this.awards, visits: this.visits, bestTimes: this.bestTimes, worldHour: this.worldHour, drivingTime: this.drivingTime };
+    const data = this.snapshot();
     try {
       if (!this.storage) throw new Error('Storage unavailable');
       if (this.unreadableSave) { this.storage.setItem('harborline-save-recovery', this.unreadableSave); this.unreadableSave = null; }

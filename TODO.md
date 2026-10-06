@@ -41,7 +41,6 @@ Updated: 2026-10-05. Continue this implementation; do not regenerate the game.
 - [ ] Execute the real-browser suite, actual GPU context-restoration test and performance benchmark on suitable hardware.
 - [ ] Native Electron window, fullscreen, save/reopen and offline-play checks on Windows and supported Ubuntu/Linux x64.
 - [ ] Longer human playtesting for traffic behavior, all customer routes, vehicle tuning and economy balance.
-- [ ] If browser careers need to be moved to desktop, add explicit save export/import.
 - [ ] After development/testing and a separate user release instruction: real installers/app icons/license bundle, platform packaging, tags and a GitHub Release.
 
 ## Development source repository
@@ -51,6 +50,13 @@ Updated: 2026-10-05. Continue this implementation; do not regenerate the game.
 - Continue in `/home/ubuntu/Desktop/something`, preserving the existing Harborline implementation, identifiers and save behavior.
 - Future workflow: modify → test → inspect status/diff → stage intended files → commit the actual milestone → push to the same origin/main.
 - Source publication is a development backup. Final installers, Windows/Linux distribution builds, release tags and GitHub Releases remain deferred.
+
+## Current follow-up — 2026-10-06
+
+- [x] Add confirmed local JSON career export/import from Settings for browser/desktop profile transfer.
+- [x] Use drivable road-route distances in the dispatch contract list.
+- [x] Add compact-layout styling and integration coverage for the career-backup controls.
+- [x] Expand environment-compatible coverage to **56/56 passing tests**; real rendering remains hardware-blocked.
 
 ## Environment blocker — not a game failure
 

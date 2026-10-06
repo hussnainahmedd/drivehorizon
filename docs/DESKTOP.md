@@ -22,7 +22,7 @@ Installed Harborline launcher
 - The desktop title/pause menus provide quit; F11 and Settings toggle fullscreen.
 - Closing the native window requests a synchronous career save, then acknowledges close. A short fallback handles an unresponsive renderer.
 - Saves retain the existing `harborline-save-v1` key, with version-two data and version-one migration. Chromium persists localStorage under the application's stable user-data profile. Typical directories are `%APPDATA%/Harborline` on Windows and `~/.config/Harborline` on Linux, subject to OS/XDG configuration. These are profile directories, not a promised plain JSON save-file path.
-- Browser preview and desktop saves are separate origins/profiles. Automatic browser-to-desktop career transfer is not implemented; an export/import option can be added before migration to released packages if needed.
+- Browser preview and desktop saves are separate origins/profiles. Settings provides a local JSON career export/import path for manual transfer before or after desktop packaging.
 
 ## Developer review launch
 

@@ -9,6 +9,7 @@
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 @media(min-width:801px){.interaction{bottom:92px}}
 .career-line{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:8px;letter-spacing:.9px;color:var(--lime)}
+.save-tools{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 0;margin:3px 0 18px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.save-tools>div:first-child{display:flex;flex-direction:column;gap:5px}.save-tools strong{font-size:11px}.save-tools span{max-width:360px;font-size:9px;line-height:1.45;color:var(--muted)}.save-tools>div:last-child{display:flex;gap:8px;flex-shrink:0}.save-tools .secondary-button{padding:10px 13px;font-size:9px}
 .rank-summary{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin:18px 0;font-size:12px;color:var(--lime)}.rank-summary>span{font-size:9px;color:var(--muted);letter-spacing:.5px}
 .career-progress{height:5px;margin-bottom:15px;background:#ffffff16;border-radius:3px;overflow:hidden}.career-progress>i{display:block;height:100%;background:var(--lime)}
 .career-modal,.garage-modal{max-width:760px}.section-heading{font-size:10px;letter-spacing:1.5px;margin:24px 0 12px;color:var(--lime)}
@@ -19,5 +20,6 @@
 .screen-graphics{background:#142729f2}.screen-graphics .modal-copy{line-height:1.8}
 @media(max-width:800px){.save-indicator{top:72px;right:16px;font-size:6px}.career-line{font-size:6px}.upgrade{gap:12px}.upgrade>button{min-width:130px}.customer-log>div{font-size:10px}}
 @media(max-width:550px){.upgrade{align-items:flex-start;flex-direction:column}.upgrade>button{max-width:none;width:100%}.rank-summary{font-size:10px}.milestone p{font-size:9px}}
+@media(max-width:550px){.save-tools{align-items:flex-start;flex-direction:column;gap:12px}.save-tools>div:last-child{width:100%}.save-tools .secondary-button{flex:1}}
 .fatal-message pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.7 monospace;max-width:650px;color:var(--muted);margin:20px auto}
 .modal{max-height:calc(100vh - 48px);overflow-y:auto}.screen-career .modal,.screen-garage .modal{pointer-events:auto}

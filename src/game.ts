@@ -103,6 +103,7 @@ export class Harborline {
     this.applyQuality();
     this.ui.onAction = (action, value) => this.action(action, value);
     this.ui.onSetting = (key, value) => this.setSetting(key, value);
+    this.ui.onImport = raw => this.importSave(raw);
     this.ui.show('menu', this.progress);
     this.vehicle.onImpact = impact => { this.progress.impact(impact.speed); this.audio.impact(impact.speed); this.shake = Math.min(0.25, impact.speed * 0.012); this.ui.flash(); if (impact.speed > 6) this.ui.toast('A little less hurry. Your car and cargo felt that.'); };
     this.attachInput(canvas);
@@ -167,7 +168,25 @@ export class Harborline {
     }
     if (action === 'rescue' && this.screen === 'pause') { const cost = this.progress.rescue(); this.safeSpawn(); this.waypoint = null; this.cameraInitialized = false; this.lowFuelWarning = this.lowHealthWarning = false; this.setScreen('drive'); this.ui.toast(`Back at dispatch. Roadside assistance: ${formatMoney(cost)}.`, 'success'); }
     if (action === 'fullscreen') toggleFullscreen().catch(() => this.ui.toast('Fullscreen is unavailable in this window.'));
+    if (action === 'export-save') this.exportSave();
     if (action === 'quit' && desktopBridge()) { if (this.progress.hasSave) this.progress.save(); void desktopBridge()!.quit(); }
+  }
+
+  private exportSave() {
+    try {
+      const blob = new Blob([this.progress.exportSave()], { type: 'application/json' });
+      const url = URL.createObjectURL(blob), link = document.createElement('a');
+      link.href = url; link.download = 'harborline-career-backup.json'; link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      this.ui.toast('Career backup downloaded.', 'success');
+    } catch { this.ui.toast('Career backup could not be exported.', 'error'); }
+  }
+
+  private importSave(raw: string) {
+    if (!window.confirm('Import this career backup? Your current local career will be replaced.')) return;
+    if (!this.progress.importSave(raw)) { this.ui.toast('That career backup is invalid or from an incompatible game version.', 'error'); return; }
+    if (!this.progress.saveAvailable) { this.ui.toast('Career loaded for this session, but storage is unavailable.'); return; }
+    location.reload();
   }
 
   private setSetting(key: keyof Settings, value: string) {
