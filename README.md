@@ -5,9 +5,9 @@ procedurally generated coastal city. Drive an Estate 2.0 Touring, accept
 delivery contracts, follow the road network through traffic, maintain the car,
 and build a courier career. The current packaged milestone is **v0.1.0**.
 
-Repository: <https://github.com/hussnainahmedd/astra-3d-car-game>
+Repository: <https://github.com/hussnainahmedd/drivehorizon>
 
-The repository name is retained as requested. The game, desktop application,
+The game, desktop application,
 package metadata and user-facing interface are branded DriveHorizon.
 
 ## Game overview
