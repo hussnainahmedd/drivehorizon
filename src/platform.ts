@@ -5,9 +5,9 @@ interface DesktopBridge {
   onClose(callback: () => void): () => void;
 }
 
-declare global { interface Window { harborlineDesktop?: DesktopBridge } }
+declare global { interface Window { driveHorizonDesktop?: DesktopBridge } }
 
-export function desktopBridge() { return typeof window !== 'undefined' ? window.harborlineDesktop : undefined; }
+export function desktopBridge() { return typeof window !== 'undefined' ? window.driveHorizonDesktop : undefined; }
 
 export async function toggleFullscreen() {
   const desktop = desktopBridge();

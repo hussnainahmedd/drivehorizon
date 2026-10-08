@@ -6,7 +6,9 @@ import { RANKS, UPGRADES, type UpgradeId } from '../src/career';
 import { DEFAULT_SETTINGS, DESTINATIONS } from '../src/config';
 import { SpatialHash } from '../src/math';
 
-const KEY = 'harborline-save-v1';
+const KEY = 'drivehorizon-save-v1';
+const LEGACY_KEY = 'harborline-save-v1';
+const RECOVERY_KEY = 'drivehorizon-save-recovery';
 function storage() {
   const data = new Map<string, string>();
   const api: SaveStorage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => { data.set(key, value); } };
@@ -89,11 +91,11 @@ test('affordable partial services charge once and never create debt', () => {
 
 test('version-one saves migrate in place without losing money, cargo, position or settings', () => {
   const { data, api } = storage();
-  data.set(KEY, JSON.stringify({ version: 1, money: 980, completed: 5, earnings: 2100, distance: 7654, vehicle: { x: 120, z: 40, heading: 1, fuel: 42, health: 70 }, mission: { index: 4, elapsed: 55, cargo: 82, initialHealth: 90 }, settings: { ...DEFAULT_SETTINGS, units: 'mph' } }));
+  data.set(LEGACY_KEY, JSON.stringify({ version: 1, money: 980, completed: 5, earnings: 2100, distance: 7654, vehicle: { x: 120, z: 40, heading: 1, fuel: 42, health: 70 }, mission: { index: 4, elapsed: 55, cargo: 82, initialHealth: 90 }, settings: { ...DEFAULT_SETTINGS, units: 'mph' } }));
   const p = new Progression(new VehiclePhysics(), api);
   assert.equal(p.loadWarning, null); assert.equal(p.hasSave, true); assert.equal(p.xp, 450); assert.equal(p.money, 980);
   assert.equal(p.mission!.cargo, 82); assert.equal(p.vehicle.x, 120); assert.equal(p.vehicle.totalDistance, 7654); assert.equal(p.settings.units, 'mph');
-  p.save(); assert.equal(JSON.parse(data.get(KEY)!).version, 2);
+  p.save(); assert.equal(JSON.parse(data.get(KEY)!).version, 2); assert.ok(data.has(LEGACY_KEY));
   assert.equal(new Progression(new VehiclePhysics(), api).mission!.elapsed, 55);
 });
 
@@ -109,7 +111,7 @@ test('world time, upgrades and customer history survive reload and reset cleanly
 test('invalid fields are sanitized and a corrupt save is retained in a recovery key', () => {
   const { data, api } = storage(); const raw = '{interrupted save'; data.set(KEY, raw);
   const p = new Progression(new VehiclePhysics(), api); assert.equal(p.loadWarning, 'corrupt'); assert.equal(p.money, 350);
-  assert.equal(data.get(KEY), raw); p.save(); assert.equal(data.get('harborline-save-recovery'), raw);
+  assert.equal(data.get(KEY), raw); p.save(); assert.equal(data.get(RECOVERY_KEY), raw);
   const valid = JSON.parse(data.get(KEY)!); valid.vehicle.fuel = 'full'; valid.vehicle.health = -99; valid.vehicle.x = 9999; valid.upgrades.tires = 99; valid.mission = { index: 100, cargo: 100, elapsed: 0 };
   data.set(KEY, JSON.stringify(valid)); const restored = new Progression(new VehiclePhysics(), api);
   assert.equal(restored.vehicle.fuel, 100); assert.equal(restored.vehicle.health, 0); assert.equal(restored.vehicle.x, 280); assert.equal(restored.upgrades.tires, 3); assert.equal(restored.mission, null);

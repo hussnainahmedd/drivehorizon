@@ -1,321 +1,370 @@
-# Astra 3D Car Game
+# DriveHorizon — 3D Driving Simulator
 
-**WORK IN PROGRESS / ACTIVE DEVELOPMENT**
+DriveHorizon is a local-first, single-player 3D driving simulator set in a
+procedurally generated coastal city. Drive an Estate 2.0 Touring, accept
+delivery contracts, follow the road network through traffic, maintain the car,
+and build a courier career. The current packaged milestone is **v0.1.0**.
 
-Development source repository: [hussnainahmedd/astra-3d-car-game](https://github.com/hussnainahmedd/astra-3d-car-game). This repository preserves the current implementation and unfinished work for continued development. The game is not finished or production-ready; this upload is not a final release, installer, or `v1.0.0` tag. The existing npm version field is development metadata, not a released version.
+Repository: <https://github.com/hussnainahmedd/astra-3d-car-game>
 
-The current game, interface, package identifiers and save profile use the existing name **Harborline — Coastal Courier**. These identifiers are retained to preserve the implementation and existing careers.
+The repository name is retained as requested. The game, desktop application,
+package metadata and user-facing interface are branded DriveHorizon.
 
-### Harborline — Coastal Courier: take the scenic route.
+## Game overview
 
-A single-player 3D driving game set in a procedurally built coastal city, currently a **development/review build**. Take the keys to an Estate 2.0 Touring, accept delivery contracts, navigate city streets and traffic, park at your customer's loading bay, and earn money. Use your earnings to maintain and upgrade your vehicle, progress through courier ranks, or simply explore the waterfront.
+The game starts at dispatch in South Quay. A delivery is accepted from the
+dispatch board, loaded into the vehicle, and shown on the GPS, minimap, city
+map and 3D destination marker. The player drives to the loading bay, parks,
+and delivers the cargo. Completion rewards money and XP; fuel, vehicle
+condition, cargo condition, upgrades and career history persist locally.
 
-**No API keys, accounts, paid assets, CDNs, or runtime network services.** The city, vehicles, textures, interface artwork, and engine audio are generated locally. `npm run build` generates `dist/` with the compiled HTML/JavaScript/CSS game; it is not an executable or an installer. Generated builds, dependencies and browser-test output are excluded from Git and rebuilt locally; all development source, the lockfile, configuration, procedural assets, tests and continuation documents are included.
+There are six repeatable contracts, five courier ranks, five milestones, a fuel
+station, a repair/workshop location, roadside assistance and free-roam driving
+between jobs. A delivery's bonus window affects the bonus only; late or damaged
+cargo still pays a base reward.
 
-## Desktop status and this VM
+## Implemented features
 
-The gameplay uses **TypeScript, Three.js, DOM/CSS and Web Audio**. Vite is a development/build tool. A local-only **Electron desktop host** is now prepared in `electron/`; it loads the compiled game directly at `harborline://app/index.html`, with no HTTP server, and provides fullscreen, quit and save-on-close integration.
+### Driving and vehicle simulation
 
-The intended future distribution targets remain **Windows x64 and Ubuntu/Linux x64**. Future packages are planned to bundle the runtime and game assets so players can launch an installed application without npm, Vite, a localhost server or OmniRush. Installer configuration, platform qualification and release artifacts remain future work, after development, testing and a separate user instruction. See [docs/DESKTOP.md](docs/DESKTOP.md).
+- Fixed-step 120 Hz force-based vehicle simulation independent of render rate.
+- Acceleration, automatic gears, braking, reversing, steering and speed-
+  sensitive steering response.
+- Front/rear slip forces, road and curb grip, rolling resistance, drag, engine
+  power, brake force and rear-grip handbrake behavior.
+- Static building/barrier/tree collisions and moving traffic collisions with
+  impact damage, cargo damage, response forces and a traffic-free road reset.
+- Persistent fuel and vehicle condition; damage limits engine power and is
+  visible on the player vehicle.
+- Visual chassis pitch, roll and heave, wheel rotation, brake lights,
+  headlights, tire marks and a procedural Estate 2.0 Touring model.
 
-**The current Ubuntu 20.04 VMware environment cannot be used to certify rendering.** Its reported `transform_feedback2`/WebGL2 failure, unaccelerated SVGA3D guest and incomplete graphics capabilities are treated as an environment blocker. This session uses non-rendering tests; existing screenshots are historical, not verification of the current build.
+### City, traffic and presentation
 
-On a WebGL2-capable development machine, from the project directory:
+- Approximately 570 m × 570 m of drivable city with five east-west and five
+  north-south streets, named districts, intersections and service forecourts.
+- Procedural buildings, facade/window textures, shopfronts, sidewalks, curbs,
+  crosswalks, signals, streetlights, trees, park/fountain, boardwalk,
+  warehouses, containers, port cranes, water, hills and sailboats.
+- Fourteen AI vehicles on rounded multi-block routes. Traffic follows signals,
+  corners and other vehicles, slows behind the player, and exposes colliders
+  to the player simulation.
+- A 30-minute cycle with afternoon, sunset and night settings. Sun, ambient
+  light, fog, sky, windows, streetlights and headlights respond to time.
+- Synthesized Web Audio for engine, road noise, tire scrub, horn, impacts,
+  service sounds and delivery completion chimes.
 
-```bash
-npm ci
-npm run desktop:dev
-```
+### Career, interface and persistence
 
-This installs the pinned Electron runtime if needed, builds the game, and opens the desktop host directly. No localhost server is started. Dependencies/runtime downloads initially require Internet access; the game itself is local. Native-window/rendering validation is still pending on suitable Windows and Linux machines.
-
-## Browser preview on a graphics-capable machine
-
-From the existing project directory (`/home/ubuntu/Desktop/something` on this development machine), after installing dependencies and building:
-
-```bash
-npm ci
-npm run build
-./start.sh
-```
-
-This development launcher serves the local build at **http://localhost:4173** and opens the default browser. Leave the terminal running. Press **Ctrl+C** to stop the server. If `dist/` is missing, the script runs `npm install` and builds it first. It is a browser preview, not the released desktop application. A compatible graphics driver is required; this VM's rendering remains environment-blocked.
-
-To start without opening a browser:
-
-```bash
-./start.sh --no-open
-```
-
-To use another port:
-
-```bash
-HARBORLINE_PORT=4180 ./start.sh
-```
-
-Alternatively, the compiled game only requires Python's standard-library HTTP server:
-
-```bash
-python3 -m http.server 4173 --bind 127.0.0.1 --directory dist
-```
-
-Then open **http://localhost:4173**. Serve the game over HTTP; do not double-click `dist/index.html` as a `file://` URL.
-
-### Development and rebuilding
-
-Development requirements: **Node.js 24.15+** (tested with 24.21.0), npm, and a WebGL2-capable desktop browser or the bundled Electron runtime. Node 22.22.2+ is also supported by the current test dependencies. Python 3 is only used by the optional browser launch script. Players of future desktop packages will not need Node or Python.
-
-```bash
-npm ci
-npm run dev
-```
-
-Open **http://localhost:5173**. Both Vite commands below bind to all interfaces by default; for a loopback-only development server, use `npm run dev -- --host 127.0.0.1`. To type-check and compile the current game for local review:
-
-```bash
-npm run build
-npm run preview
-```
-
-Preview is served at **http://localhost:4173**. Installing packages initially requires Internet access; playing or serving the already-built `dist/` directory does not.
-
-## Your first delivery
-
-1. Click **Get behind the wheel**, or press **Enter** on the title screen.
-2. You start within range of **Harborline dispatch**, in South Quay. While stopped, press **E**.
-3. Choose **Sunday Coffee**. Your package is loaded and the destination appears on the GPS, minimap, road guidance, and 3D marker.
-4. Drive straight along Harbor Boulevard. Keep an eye on traffic; use **S** to slow down before the loading bay.
-5. Park within **9 meters** of the green destination ring at under **5.4 km/h**, then press **E** to deliver.
-6. The receipt shows your payment, time bonus, careful-handling bonus, and new balance.
-7. Return to dispatch for another contract, or keep exploring. **M** opens the city map; choose dispatch, fuel, repairs, or your active delivery as a GPS destination.
-
-The time window affects your **bonus**, not whether a delivery can be completed. Late or damaged deliveries still pay. All six contracts are repeatable.
+- Six delivery contracts with cargo types, reward values, distance guidance and
+  fragile-cargo handling.
+- Money, delivery bonuses, XP, five ranks, promotion rewards, milestones,
+  customer visits, best clean-delivery times and lifetime earnings.
+- Four upgrade paths with three levels each: touring tires, engine tuning,
+  economy tune and cargo restraints. Upgrades affect the actual simulation and
+  are rank-gated and persistent.
+- Tidal fuel station, Quayside Motor Works repair shop and roadside assistance.
+  Assistance returns the car near dispatch, restores minimum resources and
+  applies a time penalty to an active delivery.
+- HUD with speed, gear, RPM, fuel, condition, cargo, balance, clock, district,
+  street, delivery bonus and route guidance.
+- Title, pause, dispatch, workshop, career journal, settings, controls, city
+  map, delivery receipt, graphics-recovery and new-career screens.
+- Local autosave while driving and on important state changes. Career data,
+  vehicle state, active delivery, settings, upgrades and cycle time survive a
+  reload. Existing project saves are migrated into the DriveHorizon save
+  profile on their next save.
+- Local JSON career backup export/import from Settings. No save or gameplay
+  data is uploaded.
 
 ## Controls
 
-| Key / input | Action |
-|---|---|
-| **W / ↑** | Accelerate; brake first if reversing |
-| **S / ↓** | Brake; hold at low speed to reverse |
-| **A / ←**, **D / →** | Steer left / right |
-| **Space** | Handbrake; reduces rear tire grip |
-| **E / Enter** | Open dispatch, deliver, refuel, or open the workshop when stopped and nearby |
-| **C** | Cycle cinematic chase, close chase, and hood cameras |
-| **Q / F** | Look left / right |
-| **Right mouse + drag** | Orbit the camera; release to recenter |
-| **Mouse wheel** | Adjust chase-camera distance |
-| **H** | Toggle headlights; automatic at dusk until manually overridden |
-| **B** | Horn |
-| **R** | Reset to the nearest traffic-free road position; keeps fuel and damage |
-| **M** | Open / close city map |
-| **Esc / P** | Pause / resume, or close a menu |
-| **Shift + /** (**?**) | Controls and driving guide |
-| **F11** | Toggle fullscreen |
+| Input | Action |
+| --- | --- |
+| `W` / `↑` | Accelerate; brake first when reversing |
+| `S` / `↓` | Brake; hold at low speed to reverse |
+| `A` / `←`, `D` / `→` | Steer left/right |
+| `Space` | Handbrake |
+| `E` / `Enter` | Open dispatch, deliver, refuel or open the workshop |
+| `C` | Cycle cinematic chase, close chase and hood cameras |
+| `Q` / `F` | Look left/right |
+| Right mouse + drag | Orbit the camera |
+| Mouse wheel | Change chase-camera distance |
+| `H` | Toggle headlights |
+| `B` | Horn |
+| `R` | Reset to a nearby traffic-free road position |
+| `M` | Open/close the city map |
+| `Esc` / `P` | Pause/resume or close a menu |
+| `Shift` + `/` (`?`) | Open the controls guide |
+| `F11` | Toggle fullscreen |
 
-The game pauses automatically when the window loses focus or the tab is hidden. Keyboard driving is intended for a desktop or laptop.
+The game pauses and clears held driving input when the window loses focus or a
+document becomes hidden.
 
-## Features
+## Verified technology stack
 
-### Driving and presentation
+- **Language:** TypeScript, targeting ES2022.
+- **3D:** Three.js `0.160.1`, WebGL 2 preferred with a compatible WebGL 1
+  fallback.
+- **Web application:** Vite `7.x`, HTML, DOM APIs and CSS.
+- **Audio:** Web Audio API with locally synthesized oscillators and noise.
+- **Desktop:** Electron `44.5.1` with a sandboxed, context-isolated preload;
+  electron-builder `26.15.3` for distribution.
+- **Persistence:** browser/Electron `localStorage` and local JSON backup files.
+- **Tests:** Node's built-in test runner through `tsx`, TypeScript checks,
+  JSDOM `30.1.2`, synthetic canvas/audio adapters, Playwright `1.48.2`, and
+  production HTTP asset smoke checks.
+- **Runtime tools:** Node.js `24.21.0` and npm for development/building.
 
-- Fixed **120 Hz** force-based vehicle simulation, independent of rendering frame rate.
-- Dynamic bicycle tire model with front/rear slip angles, load transfer, road-dependent grip, steering response, speed-sensitive steering lock, rolling resistance, aerodynamic drag, engine power curve, braking, reverse, and rear-grip handbrake behavior.
-- Automatic gears and RPM, speed-dependent engine sound, tire scrub, wind/road noise, horn, impact sounds, and completion chimes, synthesized with the Web Audio API.
-- Damped chassis pitch, roll, and heave for acceleration, braking, cornering, curbs, and rough terrain. Physics position is planar; the sprung visual chassis supplies suspension motion rather than a full six-degree-of-freedom rigid-body solver.
-- Detailed procedural estate car: shaped body and cabin, glass, pillars, grille, trim, mirrors, handles, plates, alloy wheels, rotating player wheels, steering wheels, brake lights, and projected headlights.
-- Persistent fuel and damage. Impacts reduce engine power and cargo condition; visible scratches appear on a damaged player vehicle.
-- Spring-smoothed chase cameras with look-around, zoom, speed-sensitive FOV, impact shake, and building-occlusion avoidance.
-- Tire skid marks, collision response, shoreline boundaries, and road reset.
+There are no API keys, hosted game services, runtime CDNs, paid game assets or
+runtime network calls. Procedural geometry, textures, interface artwork and
+audio are created locally. The packaged game includes the Electron/Chromium
+runtime and compiled assets, so players do not need Node.js, npm, Vite, a
+browser or a development server.
 
-### Procedural city and traffic
+## Application architecture
 
-- Approximately **570 × 570 meters** of drivable city, ten named streets, 25 intersections, and distinct harbor, market, garden, old-town, and waterfront areas.
-- More than 100 procedural buildings, multiple facade styles, windows that illuminate at night, ground-floor shopfronts, rooftop details, and named delivery storefronts.
-- Lane markings, crosswalks, curbs, sidewalks, streetlights, coordinated traffic signals, trees, a park and fountain, loading bays, a boardwalk, benches, guardrails, warehouses, port cranes, containers, distant hills, water, and sailboats.
-- **14 AI vehicles** on rounded multi-block road routes. They brake for corners, signals, other traffic, and the player. AI updates at 30 Hz; vehicle collisions are checked at the player physics rate.
-- A **30-minute day/night cycle**, with afternoon, golden-hour, and night overrides. Sun angle, ambient light, sky, fog, building windows, streetlight pools, and headlights change with time.
+The same TypeScript/Three.js application is compiled by Vite for browser
+development and loaded from packaged local assets by Electron. Electron serves
+only the compiled `dist/` files through the restricted `drivehorizon://` local
+protocol. The renderer has no Node integration; the preload exposes only
+fullscreen, quit and save-on-close callbacks.
 
-### Career and interface
+The simulation uses a fixed-step accumulator. Physics, fuel, cargo time and
+career time are independent of display frame limits. World generation,
+vehicle dynamics, traffic, navigation, rendering, UI, audio and persistence
+are separate modules. Tests can run the coordinator using non-GPU adapters;
+those tests verify logic and wiring rather than rendered pixels.
 
-- Six repeatable delivery contracts, with varied cargo, destination, base pay, suggested bonus windows, and fragile-package handling.
-- A working money economy, completion receipts, lifetime earnings, delivery count, and distance driven.
-- Five courier ranks, XP for every completed delivery, one-time promotion rewards, and five cash-paying milestones. The career journal tracks customer visits and clean-delivery best times.
-- Quayside workshop offers three levels each of touring tires, engine tuning, fuel efficiency and cargo restraints. Higher levels require courier ranks; purchases persist and affect the actual simulation.
-- **Tidal fuel station** at Foundry Street: $1.80 per percentage point of fuel restored.
-- **Quayside Motor Works** at Juniper Avenue: $3.20 per percentage point of vehicle condition restored.
-- Services perform affordable partial refills/repairs when the full bill exceeds your balance.
-- Active cargo can be returned from the pause menu without a cancellation fee. Starting a new career requires an explicit in-game confirmation.
-- Roadside assistance from the pause menu costs up to $75, returns you to dispatch, and ensures at least 25% fuel and 45% condition. It also works at a zero balance, so the career cannot be permanently stranded. An active delivery receives a 40-second time penalty.
-- GPS routing through the road graph, next-turn / turn-around guidance, subtle road dots, a destination ring and marker, local minimap, and expanded city map.
-- Speedometer, gear, tachometer, fuel, health, cargo condition, bonus countdown, clock, district, street, and balance displays.
-- Title screen, pause menu, dispatch board, workshop, career journal, settings, controls guide, map, contextual interactions, save status and notifications.
-- Graphics, time of day, camera, speed units, audio level, look sensitivity, route guidance, camera shake, fullscreen and 30/60/120/uncapped render limits. Render limits do not alter 120 Hz physics.
-- Local autosave every eight driving seconds and on purchases, mission changes, pause, page exit and desktop close. Career, active cargo, vehicle location/resources, settings, upgrades, customer history and cycle time survive reloading. Version-one saves migrate in place using the original storage key. Corrupt data is retained under `harborline-save-recovery` before replacement; failed saves are reported in the interface.
-- Browser storage is per browser and origin; changing ports creates a separate save. Desktop saves use the stable local app origin under Electron's user-data directory. Browser and desktop profiles are separate. **New Career** starts fresh while preserving settings.
-- Career backups can be exported as local JSON from Settings and imported into another browser origin or a future desktop profile. Import replaces the current career only after confirmation; no backup is uploaded anywhere.
-
-## Graphics and performance
-
-The renderer prefers **WebGL 2** and supports a compatible **WebGL 1** fallback. Three.js remains pinned to `0.160.1`, preserving the existing fallback. WebGL1 must provide instancing and standard derivatives; this does not guarantee a usable graphics path on the current VM. Context selection and renderer-error classification are covered by non-rendering tests.
-
-- **Performance:** efficient vertex-lit materials, contact shadows, lower render resolution, no real-time sun shadow map.
-- **Balanced:** PBR materials, environment reflections, 1024-pixel sun shadows.
-- **High fidelity:** higher pixel density and 2048-pixel sun shadows.
-- Performance mode is selected automatically on first launch for WebGL 1 or recognizable software/virtual graphics drivers.
-- Dynamic render scaling responds to sustained low frame rates. UI remains at native resolution.
-- Repeated world geometry uses GPU instancing. AI vehicle material colors and wheel geometry are baked into a small number of draw calls. Traffic draw distance follows graphics quality, collision queries use a spatial hash, and the sun shadow area follows the player. Performance mode skips environment-reflection generation and real-time shadow maps.
-- Simulation catch-up is bounded after long stalls. Hidden windows stop rendering; graphics context loss saves and pauses gameplay, prevents resuming against a lost context, and returns to pause on restoration.
-- Current GPU frame-rate, visual quality and actual context-restoration checks are **environment-blocked** on the VMware guest. No browser was launched to repeat the known failure during this session.
-
-For the clearest presentation on a capable GPU, choose **Balanced** or **High fidelity** in Settings. Performance mode is available for slower compatible hardware. Desktop packaging cannot add graphics features missing from a VM's driver.
-
-## Architecture
+## Project structure
 
 ```text
-index.html                  Entry page and loading state
+index.html                 Entry page, metadata and loading screen
 src/
-  main.ts                   Small application entry and fatal-error boundary
-  game.ts                   Existing game coordinator, loop, input and interactions
-  physics.ts                Deterministic vehicle dynamics and collision response
-  vehicle.ts                Procedural vehicle geometry, lights, damage, batching
-  world.ts                  City generation, environment, traffic signals, lighting
-  traffic.ts                Lane routes, signal response, following and avoidance
-  config.ts                 Streets, landmarks, contracts, settings, road-graph routing
-  progression.ts            Career, delivery rewards, fuel/repairs, rescue, save/load
-  career.ts                 Ranks, milestones and persistent upgrade definitions
-  audio.ts                  Procedural Web Audio engine and effects
-  ui.ts                     Menus, HUD, minimaps, receipts, notifications
-  style.css                 Responsive interface presentation
-  render-quality.ts         Switchable lightweight / PBR material paths
-  math.ts                   Math helpers, seeded random generation, spatial hashing
-  graphics.ts               Context negotiation, diagnostics and error classification
-  timing.ts                 Fixed-step clock and independent render cadence
-  signals.ts                Shared traffic-light states and AI speed limits
-  navigation.ts             GPS guidance, route distance and map projection
-  camera.ts                 Building occlusion math, without GPU dependencies
-  recovery.ts               Traffic-free lane reset placement
-  platform.ts               Browser/desktop fullscreen and close integration
+  main.ts                  Application bootstrap and fatal-error boundary
+  game.ts                  DriveHorizon coordinator, loop, input and actions
+  physics.ts               Vehicle dynamics and collision response
+  vehicle.ts               Procedural player/traffic vehicle models
+  world.ts                 City generation, scenery, signals and lighting
+  traffic.ts               AI routes, following and signal behavior
+  config.ts                Streets, landmarks, contracts, settings and routing
+  progression.ts           Career, delivery rewards, services and save/load
+  career.ts                Ranks, milestones and upgrade definitions
+  navigation.ts            GPS guidance, route distance and map projection
+  camera.ts                Camera occlusion calculations
+  recovery.ts              Traffic-free road reset placement
+  audio.ts                 Procedural Web Audio engine
+  ui.ts                    HUD, menus, maps, receipts and notifications
+  graphics.ts              WebGL negotiation and diagnostics
+  render-quality.ts        Lightweight/PBR material switching
+  timing.ts                Fixed physics clock and render cadence
+  signals.ts               Shared signal phases and AI limits
+  math.ts                  Math, random and spatial-hash helpers
+  platform.ts              Browser/desktop platform bridge
+  style.css                Interface styling and responsive layouts
 electron/
-  main.cjs                  Native local-only application host
-  preload.cjs               Isolated fullscreen, quit and close-save bridge
-  assets.cjs                Local asset protocol and sender validation
-public/favicon.svg          Local app icon
-tests/
-  simulation.test.ts        Dynamics, collisions, economy, save/load, routing tests
-  career.test.ts            Career completion, upgrades, migration and save failures
-  systems.test.ts           Timing, traffic, cameras, navigation and material logic
-  game.test.ts              DOM/input/game-loop integration with a non-GPU adapter
-  graphics.test.ts          WebGL2/1 selection and error classification
-  desktop.test.ts           Host/preload wiring and local asset/IPC tests, without GPU
-  build-smoke.mjs           Real production HTTP asset checks, without a browser
-  browser.mjs               Real-browser end-to-end gameplay and screenshot checks
-  benchmark.mjs             Renderer / performance inspection
-  inspect.mjs               Initial Chromium visual inspection helper
-  rendering-environment.mjs Known-VM-blocker reporting for rendering helpers
-  helpers/dom.ts            Synthetic DOM/audio/graphics test adapters
-package.json                Dependencies and development/verification commands
-package-lock.json           Pinned dependency resolution for npm ci
-tsconfig*.json              Application and test TypeScript configuration
-vite.config.ts              Development ports and portable build asset paths
-.gitignore                  Generated output, local caches and credential exclusions
-start.sh                    Ubuntu launcher for a locally compiled browser build
-dist/                       Generated browser game assets (ignored by Git)
-test-results/               Generated test output/historical local screenshots (ignored)
-TODO.md                     Durable continuation state and remaining review work
-docs/DESKTOP.md             Distribution architecture and next-phase strategy
-docs/SESSION-2026-10-05.md   Historical continuation and verification report
+  main.cjs                 Native window and local asset protocol
+  preload.cjs              Isolated fullscreen/quit/close-save bridge
+  assets.cjs               Local asset allowlist and sender validation
+  check-assets.cjs         Packaged local-asset/runtime diagnostic
+public/favicon.svg         Browser and desktop application icon source
+  simulation.test.ts       Physics, collision, economy, persistence and routes
+  career.test.ts           Progression, upgrades, migration and backup tests
+  systems.test.ts          Timing, traffic, navigation, camera and materials
+  game.test.ts             DOM/input/game-loop integration without a GPU
+  graphics.test.ts         WebGL selection and error classification
+  desktop.test.ts          Electron host/preload/protocol tests
+  build-smoke.mjs          Production asset and portable-path checks
+  browser.mjs              Real-browser gameplay/rendering suite
+  benchmark.mjs            Optional rendering/performance inspection
+  inspect.mjs               Optional Chromium visual inspection helper
+  DESKTOP.md               Desktop architecture and packaging details
+  RELEASE.md               Release notes template and v0.1.0 notes
+.github/workflows/release.yml  Tagged Windows/Linux build and release workflow
+package.json               Scripts, dependencies and electron-builder metadata
+package-lock.json          Reproducible npm dependency resolution
+vite.config.ts             Portable Vite build and local ports
+start.sh                   Linux browser-preview launcher
+LICENSE                    MIT license
 ```
 
-The game uses a fixed-step accumulator. Physics, fuel, cargo clocks and career time stop in menus. Rendering has an independent frame limit; camera and chassis motion are smoothed, lighting reads persisted simulation time, and the DOM interface updates at a throttled rate. The minimap uses a small 2D canvas. Traffic pathing, gameplay state, rendering, audio and persistence remain separate modules. Tests can run the real coordinator with a non-GPU adapter; that checks gameplay and menu wiring, not rendered pixels.
+## Installing a desktop release
 
-## Verification
+Download the actual assets from [GitHub Releases](https://github.com/hussnainahmedd/astra-3d-car-game/releases).
+The tagged release workflow is configured to publish these names after both
+platform jobs succeed:
 
-### All environment-compatible verification
+### Windows x64
+
+- `DriveHorizon-Setup-Windows-x64.exe` — assisted NSIS installer with Start
+  Menu/Desktop shortcuts and uninstall support.
+- `DriveHorizon-Windows-x64.zip` — portable ZIP containing the packaged app.
+
+Run the installer, or extract the ZIP and launch `DriveHorizon.exe`. Windows
+packages are built on GitHub Actions `windows-latest`.
+
+### Linux x64
+
+- `DriveHorizon-Linux-x64.AppImage` — portable Linux package.
+- `DriveHorizon-Linux-x64.deb` — Debian/Ubuntu package.
+
+```bash
+chmod +x DriveHorizon-Linux-x64.AppImage
+./DriveHorizon-Linux-x64.AppImage
+sudo apt install ./DriveHorizon-Linux-x64.deb
+```
+
+Linux packages are built on GitHub Actions Ubuntu x64. The package contains
+the app runtime and core gameplay assets and does not require a hosted server.
+Actual graphics/audio quality depends on the host GPU and desktop libraries.
+
+## Development environment setup
+
+Requirements:
+
+- Node.js `24.21.0` and npm.
+- A desktop browser or Electron runtime with WebGL support for interactive
+  review. A WebGL 2-capable physical or fully accelerated machine is needed
+  for rendering qualification.
+- Python 3 only for the optional `start.sh` preview launcher.
+
+Install the pinned dependency tree:
+
+```bash
+npm ci
+```
+
+Run the Vite development server:
+
+```bash
+npm run dev -- --host 127.0.0.1
+```
+
+Open <http://127.0.0.1:5173>. For a compiled browser preview:
+
+```bash
+npm run build
+npm run preview -- --host 127.0.0.1
+```
+
+The preview is at <http://127.0.0.1:4173>. The Linux convenience launcher
+builds when needed and serves the same local `dist/` directory:
+
+```bash
+./start.sh --no-open
+# Optional alternate port:
+DRIVEHORIZON_PORT=4180 ./start.sh
+```
+
+To review the local desktop shell during development:
+
+```bash
+npm run desktop:dev
+```
+
+This builds `dist/` and opens the Electron window directly; it does not start
+an HTTP server.
+
+## Build desktop applications
+
+Build the Linux x64 AppImage and Debian package on Linux:
+
+```bash
+npm run desktop:package:linux
+```
+
+After a Linux package build, validate the unpacked Electron application and its
+bundled local assets without opening a game window:
+
+```bash
+npm run test:package
+```
+
+Build the Windows x64 NSIS installer and ZIP on Windows:
+
+```powershell
+npm run desktop:package:win
+```
+
+Both commands first run the production Vite build and write artifacts to the
+ignored `release/` directory. The repository workflow performs the Windows
+build on `windows-latest` and the Linux build on Ubuntu, then uploads the
+artifacts and publishes a release for a `v*` tag. Do not upload files from
+`dist/` as desktop installers; `dist/` is only the compiled web application.
+
+## Testing and validation
+
+The environment-compatible verification command is:
 
 ```bash
 npm run verify
 ```
 
-This checks application and test TypeScript, desktop-host syntax, the compiled build, all non-rendering tests, and production HTTP assets. It never starts a browser or creates a GPU context. The 2026-10-05 continuation report records **53/53** tests; the current follow-up adds career-backup, route-distance and settings coverage for **56/56 passing non-rendering tests**. Rerun this command to check the current checkout.
-
-### Simulation, career, interface and host logic
+It runs application/test type checks, Electron JavaScript syntax checks, the
+production build, non-rendering tests and the production asset smoke check.
+Individual commands are also available:
 
 ```bash
+npm run typecheck
+npm run desktop:check
 npm test
+npm run test:build
 ```
 
-Tests retain the original simulation coverage and add complete career progression, one-time rewards, rank-gated upgrades, three minutes of AI simulation, renderer negotiation, corrupted-save recovery, version-one migration, paused clocks, frame-rate-independent physics, camera occlusion, and actual keyboard delivery/menu/workshop flows through the coordinator. DOM canvas, audio and GPU adapters are synthetic in these tests; visual quality and audible quality require a real-machine review.
-
-### End-to-end play test
-
-On a **graphics-capable machine**, start `npm run dev` in one terminal. Install the test browser once, then run:
+On a graphics-capable machine, the real-browser suite can be run against the
+Vite server:
 
 ```bash
 npx playwright install firefox
+npm run dev -- --host 127.0.0.1
 npm run test:browser
 ```
 
-The test uses real browser keyboard events to drive the first delivery. It then checks rewards, pause, settings, night mode, cameras, headlights, map waypoints, fuel, workshop repairs/upgrades, collisions, reset, broke-player rescue, persistence, compact UI and GPU context restoration. This current-build browser suite has not been executed successfully on this VM.
-
-To record the known VM blocker **without launching a browser**:
-
-```bash
-HARBORLINE_RENDER_BLOCKED=vmware npm run test:browser
-```
-
-The result is explicitly `environment-blocked` in `test-results/rendering-status.json`, not a passed render test. The benchmark/inspection helpers accept the same flag. Omit this flag on suitable hardware.
-
-The subsequent isolated service/collision cases use an opt-in deterministic harness, available only with `?debug=1`. Normal gameplay exposes no debug API. Screenshots are written to `test-results/`.
-
-To test the compiled game instead, run the production server and use:
+The suite drives a delivery with real keyboard events and checks rendering,
+menus, settings, services, collisions, save/reload and context restoration.
+It is not part of `npm run verify` because it requires an actual browser and
+usable WebGL. On the known VMware guest, record the explicit environment
+limitation without retrying rendering:
 
 ```bash
-GAME_URL=http://127.0.0.1:4173 npm run test:browser
+DRIVEHORIZON_RENDER_BLOCKED=vmware npm run test:browser
 ```
 
-Optional Chromium testing on suitable hardware:
+That result is `environment-blocked`, not a passing render test. The same
+boundary applies to `tests/benchmark.mjs` and `tests/inspect.mjs`.
 
-```bash
-npx playwright install chromium
-BROWSER=chromium npm run test:browser
-```
+## GitHub Releases
 
-Playwright is pinned to the existing version that provides Ubuntu 20.04 test-browser builds. Browser installations are testing dependencies only. Software emulation can be explicitly requested with `SOFTWARE_RENDERING=1 BROWSER=chromium`, but does not certify hardware performance or repair this VM's driver.
+Source changes are pushed to the `main` branch of the existing repository.
+Pushing a version tag such as `v0.1.0` starts
+`.github/workflows/release.yml`. The workflow builds and uploads Windows x64
+and Linux x64 packages, verifies that all four expected artifacts exist, and
+creates a GitHub Release titled `DriveHorizon vX.Y.Z` using the release notes
+in `docs/RELEASE.md`.
 
-## Environment configuration
+The release workflow uses the short-lived GitHub Actions token supplied by the
+runner. No repository credentials are stored in source. Release assets are
+generated build outputs and are intentionally excluded from Git.
 
-No secret environment variables or `.env` file are required to develop or run the game, so no `.env.example` is needed for the current implementation. Optional launcher/test variables (`HARBORLINE_PORT`, `GAME_URL`, `BROWSER`, `HEADED`, `SOFTWARE_RENDERING`, and `HARBORLINE_RENDER_BLOCKED`) select local ports or test behavior; examples are shown above. `DISPLAY` is the normal Linux graphical-session variable. Keep credentials, authentication files, tokens and browser session data outside the source repository.
+## Known limitations
 
-## Known issues, unfinished features and planned work
+- The current Ubuntu VMware guest reports an incomplete virtual WebGL driver
+  (`transform_feedback2` is unavailable and acceleration is not active). This
+  blocks reliable local 3D rendering, audio, frame-rate and context-loss
+  qualification; it does not invalidate the non-rendering logic suite.
+- Native Windows and Linux window launch, fullscreen, offline reopen, audio
+  quality, clean-system installation and measured performance require testing
+  on the corresponding supported host hardware.
+- Vehicle dynamics use a planar force-based bicycle model with visual
+  suspension, and traffic uses bounded road routes; this is the implemented
+  simulator model rather than a full rigid-body physics engine or adaptive
+  citywide traffic network.
+- Browser and packaged desktop saves use separate browser/Electron profiles.
+  Use the Settings career-backup export/import controls to transfer a career.
 
-- **Rendering validation is blocked on the current VMware guest.** Existing context-negotiation tests do not certify actual 3D rendering, image quality, frame rate or GPU context restoration. Historical screenshots in the local ignored `test-results/` directory do not verify the current build.
-- Current-build city/lighting, hood/chase cameras, maps, menus, compact layouts and synthesized audio still need visual/audible review on compatible hardware.
-- The real-browser end-to-end suite, GPU restoration exercise and performance benchmarks need to run on a graphics-capable machine.
-- The Electron host is implemented, but native-window gameplay, fullscreen, offline operation and save/close/reopen behavior need real Windows and supported Ubuntu/Linux x64 validation.
-- Vehicle physics are planar bicycle dynamics with visual suspension; traffic follows rounded road routes. Longer human playtesting and handling, traffic, delivery-route and economy tuning remain.
-- Browser and desktop careers remain separate storage profiles by default, and browser origins/ports also have separate local saves. Use the Settings career-backup controls to transfer a saved career manually.
-- Desktop installer tooling/configuration, proper platform app icons, bundled license notices, clean-system checks and downloadable Windows/Linux binaries remain unfinished. Electron-builder is planned but is not currently installed or configured.
-- Actual supported Windows/Ubuntu versions, distribution formats and hardware requirements must be qualified before a future release. The proposed NSIS/AppImage/`.deb` strategy in `docs/DESKTOP.md` is a plan.
+## License
 
-See [TODO.md](TODO.md) for the durable development checklist and [docs/SESSION-2026-10-05.md](docs/SESSION-2026-10-05.md) for historical verification. Development continues from this implementation; future installers, release tags and GitHub Releases require a separate instruction after testing is complete.
-
-## Continuing development in this repository
-
-The existing local directory remains the active working copy. Continue with the normal workflow: **modify → test → review status/diff → commit → push to the same repository**.
-
-```bash
-npm run verify
-git status
-git diff
-# Stage only the intended, reviewed files, then commit the changes that occurred.
-git add <reviewed-files>
-git commit -m "feat: improve vehicle physics"
-git remote -v
-git push origin main
-```
-
-Choose a commit message that describes the actual change, such as `fix: resolve navigation issue` or `perf: optimize city rendering`. Before pushing, verify that origin still points only to `https://github.com/hussnainahmedd/astra-3d-car-game.git`. Keep development on `main` in this project directory. This is an active development source repository; final Windows/Linux packaging and release publication come later.
-
-## Assets and license
-
-All city, car, texture, sound, and interface assets in this project are generated from code or created specifically for this game. There are no third-party asset downloads at runtime. Project code is MIT licensed; see `LICENSE`. Three.js and Vite are MIT licensed; TypeScript and Playwright use Apache-2.0. Dependency license files are included in their respective npm packages.
+The project is released under the MIT License; see [LICENSE](LICENSE).
+Three.js, Electron, Vite, TypeScript, JSDOM, Playwright and other dependencies
+retain their own licenses in the installed npm packages and are not replaced
+by the project license.

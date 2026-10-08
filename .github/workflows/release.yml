@@ -1,0 +1,93 @@
+name: Build and publish DriveHorizon desktop release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Windows x64
+    runs-on: windows-latest
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.21.0
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build and package Windows x64
+        run: npm run desktop:package:win
+      - name: Upload Windows build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DriveHorizon-Windows-x64
+          path: release/
+          if-no-files-found: error
+
+  build-linux:
+    name: Linux x64
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.21.0
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build and package Linux x64
+        run: npm run desktop:package:linux
+      - name: Upload Linux build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DriveHorizon-Linux-x64
+          path: release/
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged source and release notes
+        uses: actions/checkout@v4
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: DriveHorizon-Windows-x64
+          path: release/windows
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: DriveHorizon-Linux-x64
+          path: release/linux
+      - name: Publish verified artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          shopt -s nullglob
+          assets=(
+            release/windows/DriveHorizon-Setup-Windows-x64.exe
+            release/windows/DriveHorizon-Windows-x64.zip
+            release/linux/DriveHorizon-Linux-x64.AppImage
+            release/linux/DriveHorizon-Linux-x64.deb
+            release/windows/*.blockmap
+            release/windows/*.yml
+            release/linux/*.yml
+          )
+          ((${#assets[@]} >= 4)) || { echo 'Expected four DriveHorizon desktop artifacts were not produced.' >&2; exit 1; }
+          gh release create "$GITHUB_REF_NAME" "${assets[@]}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "DriveHorizon $GITHUB_REF_NAME" \
+            --notes-file docs/RELEASE.md \
+            --verify-tag

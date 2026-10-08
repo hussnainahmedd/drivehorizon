@@ -1,10 +1,15 @@
 {
-  "name": "harborline-driving",
-  "version": "1.0.0",
+  "name": "drivehorizon",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Harborline — a locally generated coastal courier desktop game, in development.",
-  "productName": "Harborline",
+  "license": "MIT",
+  "author": {
+    "name": "DriveHorizon contributors"
+  },
+  "desktopName": "drivehorizon",
+  "description": "DriveHorizon — a locally generated 3D driving simulator.",
+  "productName": "DriveHorizon",
   "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -16,20 +21,94 @@
     "typecheck": "tsc --noEmit && tsc --project tsconfig.tests.json",
     "desktop:setup": "install-electron",
     "desktop:dev": "npm run desktop:setup && npm run build && electron .",
-    "desktop:check": "node --check electron/main.cjs && node --check electron/preload.cjs && node --check electron/assets.cjs",
+    "desktop:package:linux": "npm run build && electron-builder --linux AppImage deb --x64 --publish never",
+    "desktop:package:win": "npm run build && electron-builder --win nsis zip --x64 --publish never",
+    "desktop:check": "node --check electron/main.cjs && node --check electron/preload.cjs && node --check electron/assets.cjs && node --check electron/check-assets.cjs",
+    "test:package": "node tests/package-check.mjs",
     "verify": "npm run typecheck && npm run desktop:check && npm run build && npm test && npm run test:build"
   },
   "dependencies": {
     "three": "0.160.1"
   },
   "devDependencies": {
+    "@electron/asar": "3.4.1",
     "@types/jsdom": "28.0.1",
     "@types/three": "^0.160.0",
     "electron": "44.5.1",
+    "electron-builder": "26.15.3",
     "jsdom": "30.1.2",
     "playwright": "1.48.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vite": "^7.1.9"
+  },
+  "build": {
+    "appId": "com.hussnainahmedd.drivehorizon",
+    "productName": "DriveHorizon",
+    "executableName": "DriveHorizon",
+    "icon": "public/favicon.svg",
+    "artifactName": "DriveHorizon-${os}-${arch}.${ext}",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "LICENSE",
+      "README.md",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "DriveHorizon-Windows-x64.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "DriveHorizon-Setup-Windows-x64.${ext}",
+      "shortcutName": "DriveHorizon",
+      "uninstallDisplayName": "DriveHorizon"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "DriveHorizon-Linux-x64.${ext}",
+      "category": "Game",
+      "executableName": "drivehorizon",
+      "synopsis": "DriveHorizon 3D driving simulator",
+      "maintainer": "DriveHorizon contributors"
+    },
+    "deb": {
+      "packageName": "drivehorizon"
+    }
   }
 }

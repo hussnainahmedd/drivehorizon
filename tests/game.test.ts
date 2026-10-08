@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { Harborline } from '../src/game';
+import { DriveHorizon } from '../src/game';
 import { DEFAULT_SETTINGS, DEPOT, DESTINATIONS, FUEL_STATION, GARAGE, SPAWN } from '../src/config';
 import { type GraphicsInfo } from '../src/graphics';
 import { createDOM, FakeAudioContext } from './helpers/dom';
@@ -10,9 +10,9 @@ import { VehiclePhysics } from '../src/physics';
 
 function fixture() {
   const env = createDOM(); let renders = 0;
-  env.dom.window.localStorage.setItem('harborline-save-v1', JSON.stringify({ version: 2, started: false, money: 350, vehicle: { ...SPAWN, fuel: 100, health: 100 }, settings: { ...DEFAULT_SETTINGS, quality: 'low' } }));
+  env.dom.window.localStorage.setItem('drivehorizon-save-v1', JSON.stringify({ version: 2, started: false, money: 350, vehicle: { ...SPAWN, fuel: 100, health: 100 }, settings: { ...DEFAULT_SETTINGS, quality: 'low' } }));
   const renderer = { setSize() {}, setPixelRatio() {}, render() { renders++; }, shadowMap: { enabled: false, type: THREE.PCFSoftShadowMap } } as unknown as THREE.WebGLRenderer;
-  const game = new Harborline(() => ({ renderer, info: { api: 'WebGL 2', gpu: 'Logic-test adapter', attempts: [] } as GraphicsInfo }));
+  const game = new DriveHorizon(() => ({ renderer, info: { api: 'WebGL 2', gpu: 'Logic-test adapter', attempts: [] } as GraphicsInfo }));
   const click = (selector: string) => { const button = env.document.querySelector<HTMLButtonElement>(selector); assert.ok(button, selector); assert.equal(button.disabled, false, selector); button.click(); };
   const frames = (seconds: number, hz = 60) => { for (let i = 0; i < Math.round(seconds * hz); i++) env.frame(1 / hz); };
   return { ...env, game, click, frames, renders: () => renders };
@@ -107,7 +107,7 @@ test('context loss pauses and saves the journey, blocks resuming, and restoratio
     canvas.dispatchEvent(event); assert.ok(event.defaultPrevented); assert.equal(env.game.screen, 'graphics');
     const before = [env.game.vehicle.z, env.game.vehicle.fuel, env.renders()]; env.game.ui.onAction('resume'); env.frames(2);
     assert.deepEqual([env.game.vehicle.z, env.game.vehicle.fuel, env.renders()], before);
-    const saved = JSON.parse(env.dom.window.localStorage.getItem('harborline-save-v1')!); assert.equal(saved.vehicle.z, before[0]);
+    const saved = JSON.parse(env.dom.window.localStorage.getItem('drivehorizon-save-v1')!); assert.equal(saved.vehicle.z, before[0]);
     canvas.dispatchEvent(new env.dom.window.Event('webglcontextrestored')); assert.equal(env.game.screen, 'pause'); env.frames(0.1); assert.ok(env.renders() > before[2]);
     env.click('[data-action="resume"]'); assert.equal(env.game.screen, 'drive');
   } finally { env.close(); }
@@ -123,7 +123,7 @@ test('roadside assistance at zero balance avoids traffic and preserves the activ
     assert.equal(game.screen, 'drive'); assert.equal(game.progress.money, 0); assert.equal(game.vehicle.fuel, 25); assert.equal(game.vehicle.health, 45); assert.equal(game.progress.mission!.elapsed, 52);
     assert.ok(game.traffic.cars.every(car => Math.hypot(car.x - game.vehicle.x, car.z - game.vehicle.z) >= 8));
     assert.ok(Math.hypot(game.vehicle.x - DEPOT.x, game.vehicle.z - DEPOT.z) < 33);
-    const saved = JSON.parse(env.dom.window.localStorage.getItem('harborline-save-v1')!); assert.equal(saved.vehicle.z, game.vehicle.z);
+    const saved = JSON.parse(env.dom.window.localStorage.getItem('drivehorizon-save-v1')!); assert.equal(saved.vehicle.z, game.vehicle.z);
   } finally { env.close(); }
 });
 

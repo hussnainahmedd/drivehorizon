@@ -19,7 +19,7 @@ import { desktopBridge, toggleFullscreen } from './platform';
 import { cameraClearFraction } from './camera';
 import { roadResetPosition } from './recovery';
 
-export class Harborline {
+export class DriveHorizon {
   readonly renderer: THREE.WebGLRenderer;
   readonly graphics: GraphicsInfo;
   readonly scene = new THREE.Scene();
@@ -176,7 +176,7 @@ export class Harborline {
     try {
       const blob = new Blob([this.progress.exportSave()], { type: 'application/json' });
       const url = URL.createObjectURL(blob), link = document.createElement('a');
-      link.href = url; link.download = 'harborline-career-backup.json'; link.click();
+      link.href = url; link.download = 'drivehorizon-career-backup.json'; link.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
       this.ui.toast('Career backup downloaded.', 'success');
     } catch { this.ui.toast('Career backup could not be exported.', 'error'); }
@@ -312,7 +312,7 @@ export class Harborline {
   }
 
   private updateUI(dt: number) {
-    const destination = this.target === FUEL_STATION ? 'Tidal fuel station' : this.target === GARAGE ? 'Quayside Motor Works' : this.progress.mission && this.target === DESTINATIONS[this.progress.mission.index] ? DESTINATIONS[this.progress.mission.index].name : 'Harborline dispatch';
+    const destination = this.target === FUEL_STATION ? 'Tidal fuel station' : this.target === GARAGE ? 'Quayside Motor Works' : this.progress.mission && this.target === DESTINATIONS[this.progress.mission.index] ? DESTINATIONS[this.progress.mission.index].name : 'DriveHorizon dispatch';
     const guidance = navigationGuidance(this.route, this.vehicle.position, this.vehicle.heading, destination);
     const navigation = guidance.instruction, navDistance = formatDistance(guidance.distance);
     this.ui.update({ vehicle: this.vehicle, progress: this.progress, world: this.world, traffic: this.traffic, screen: this.screen, target: this.target, route: this.route, headlights: this.headlights, prompt: this.prompt, promptSub: this.promptSub, promptKey: this.promptKey, fps: this.fps, camera: this.progress.settings.camera, navigation, navDistance }, dt);
@@ -407,7 +407,7 @@ export class Harborline {
     if (distance(v.x, v.z, DEPOT.x, DEPOT.z) < 33 && !m) { this.setScreen('jobs'); return; }
     if (distance(v.x, v.z, FUEL_STATION.x, FUEL_STATION.z) < 10) { const cost = this.progress.refuel(); this.lowFuelWarning = v.fuel < 15; if (cost) this.audio.chime(); this.ui.toast(cost ? `${v.fuel < 99.9 ? 'Partial top-up' : 'Full tank'} · fuel ${Math.ceil(v.fuel)}% · ${formatMoney(cost)} paid.` : v.fuel > 99 ? 'Already full. You’re ready for the long way home.' : 'You need a little cash. Dispatch can help with a tow.', cost ? 'success' : 'info'); return; }
     if (distance(v.x, v.z, GARAGE.x, GARAGE.z) < 10) { this.previousScreen = 'drive'; this.setScreen('garage'); return; }
-    this.ui.toast(m ? 'Follow the green destination marker to your customer.' : 'Visit Harborline dispatch to pick up a delivery. It’s on your GPS.');
+    this.ui.toast(m ? 'Follow the green destination marker to your customer.' : 'Visit DriveHorizon dispatch to pick up a delivery. It’s on your GPS.');
   }
 
   private resetVehicle() {
@@ -434,7 +434,7 @@ export class Harborline {
 
   private exposeDebug() {
     // Opt-in deterministic harness, available only when launched with ?debug=1.
-    (window as unknown as Record<string, unknown>).__harborline = {
+    (window as unknown as Record<string, unknown>).__driveHorizon = {
       state: () => ({ screen: this.screen, x: this.vehicle.x, z: this.vehicle.z, heading: this.vehicle.heading, speed: this.vehicle.speed, forwardSpeed: this.vehicle.forwardSpeed, fuel: this.vehicle.fuel, health: this.vehicle.health, money: this.progress.money, completed: this.progress.completed, xp: this.progress.xp, rank: this.progress.career.rank.name, upgrades: { ...this.progress.upgrades }, mission: this.progress.mission ? { ...this.progress.mission } : null, fps: this.fps, graphics: this.graphics, drawCalls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles, settings: { ...this.progress.settings }, hour: this.world.hour, target: this.target, traffic: this.traffic.cars.map(c => ({ x: c.x, z: c.z, speed: c.speed })) }),
       advance: (seconds: number, input: Partial<DriveInput> = {}) => { for (let i = 0; i < Math.min(seconds, 60) / FIXED_DT; i++) this.simulate(FIXED_DT, { throttle: 0, brake: 0, steer: 0, handbrake: false, ...input }); this.updateRoute(); this.updatePrompt(); this.updateUI(0.1); },
       teleport: (x: number, z: number, heading = 0) => { this.vehicle.reset(x, z, heading); this.cameraInitialized = false; this.updateRoute(); this.updatePrompt(); },

@@ -92,7 +92,7 @@ export class CarModel {
     block(this.body, chrome, 0, 1.001, -2.157, 0.18, 0.035, 0.025);
     // Plate texture and rear-window defroster lines.
     const plateCanvas = document.createElement('canvas'); plateCanvas.width = 256; plateCanvas.height = 64;
-    const ctx = plateCanvas.getContext('2d')!; ctx.fillStyle = '#e8e4d2'; ctx.fillRect(0, 0, 256, 64); ctx.fillStyle = '#233434'; ctx.font = 'bold 37px monospace'; ctx.textAlign = 'center'; ctx.fillText(player ? 'HL · 084' : 'HL · 219', 128, 45);
+    const ctx = plateCanvas.getContext('2d')!; ctx.fillStyle = '#e8e4d2'; ctx.fillRect(0, 0, 256, 64); ctx.fillStyle = '#233434'; ctx.font = 'bold 37px monospace'; ctx.textAlign = 'center'; ctx.fillText(player ? 'DH · 084' : 'DH · 219', 128, 45);
     const plate = new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(plateCanvas), roughness: 0.6 });
     block(this.body, plate, 0, 0.71, -2.215, 0.47, 0.115, 0.016).rotation.y = Math.PI;
     block(this.body, plate, 0, 0.52, 2.216, 0.44, 0.09, 0.012);
@@ -115,7 +115,7 @@ export class CarModel {
       }
       // A restrained courier accent across the rear hatch.
       const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 128;
-      const c = canvas.getContext('2d')!; c.fillStyle = '#1d3939'; c.fillRect(0, 0, 512, 128); c.fillStyle = '#d5ecb4'; c.font = 'bold 39px sans-serif'; c.textAlign = 'center'; c.fillText('H A R B O R L I N E', 256, 54); c.font = '20px sans-serif'; c.fillText('C O A S T A L   C O U R I E R', 256, 94);
+      const c = canvas.getContext('2d')!; c.fillStyle = '#1d3939'; c.fillRect(0, 0, 512, 128); c.fillStyle = '#d5ecb4'; c.font = 'bold 39px sans-serif'; c.textAlign = 'center'; c.fillText('D R I V E H O R I Z O N', 256, 54); c.font = '20px sans-serif'; c.fillText('3 D   D R I V I N G   S I M U L A T O R', 256, 94);
       const mat = new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(canvas), roughness: 0.5 });
       block(this.body, mat, 0, 0.912, -2.215, 0.69, 0.175, 0.01).rotation.y = Math.PI;
     }

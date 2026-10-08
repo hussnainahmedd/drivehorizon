@@ -1,11 +1,11 @@
 const path = require('node:path');
 
-const GAME_URL = 'harborline://app/index.html';
+const GAME_URL = 'drivehorizon://app/index.html';
 const CSP = "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; media-src 'self' blob:; worker-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'";
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.woff2': 'font/woff2' };
 
 function isGameURL(value) {
-  try { const url = new URL(value); return url.protocol === 'harborline:' && url.hostname === 'app' && !url.port && !url.username && !url.password; }
+  try { const url = new URL(value); return url.protocol === 'drivehorizon:' && url.hostname === 'app' && !url.port && !url.username && !url.password; }
   catch { return false; }
 }
 

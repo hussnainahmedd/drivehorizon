@@ -8,7 +8,7 @@ try {
   assert.ok(address && typeof address !== 'string');
   const base = `http://127.0.0.1:${address.port}`;
   const response = await fetch(base); assert.equal(response.status, 200);
-  const html = await response.text(); assert.match(html, /HARBORLINE/); assert.match(html, /id="game"/);
+  const html = await response.text(); assert.match(html, /DRIVEHORIZON/); assert.match(html, /id="game"/);
   const assets = [...html.matchAll(/(?:src|href)="(\.\/assets\/[^\"]+)"/g)].map(match => match[1]);
   assert.ok(assets.length >= 3, 'compiled JavaScript, Three.js and CSS use portable relative paths');
   for (const asset of new Set(assets)) {

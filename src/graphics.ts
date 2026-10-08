@@ -45,7 +45,7 @@ export function failureDetails(error: unknown) {
   return {
     title: graphics ? 'Graphics support is unavailable.' : 'The game encountered an error.',
     message: graphics
-      ? 'Harborline could not start its renderer. On a capable machine, enable browser hardware acceleration and check the graphics driver. Virtual machines can expose an incomplete graphics API even with 3D acceleration enabled.'
+      ? 'DriveHorizon could not start its renderer. On a capable machine, enable browser hardware acceleration and check the graphics driver. Virtual machines can expose an incomplete graphics API even with 3D acceleration enabled.'
       : 'Your saved career is retained. The technical details below identify an initialization or runtime failure.',
     detail: error instanceof Error ? error.message + (graphics && error.attempts.length ? `\n${error.attempts.join('\n')}` : '') : String(error),
   };

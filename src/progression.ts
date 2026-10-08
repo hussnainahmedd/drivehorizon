@@ -12,8 +12,11 @@ interface SaveData {
   vehicle: { x: number; z: number; heading: number; fuel: number; health: number }; settings: Settings;
   xp: number; upgrades: VehicleUpgrades; awards: MilestoneId[]; visits: number[]; bestTimes: (number | null)[]; worldHour: number; drivingTime: number;
 }
-// Keep the original storage key so yesterday's careers migrate in place.
-const KEY = 'harborline-save-v1';
+// The new key is the stable DriveHorizon profile. The legacy key remains a
+// read-only migration source so existing browser careers are not discarded.
+const KEY = 'drivehorizon-save-v1';
+const LEGACY_KEY = 'harborline-save-v1';
+const RECOVERY_KEY = 'drivehorizon-save-recovery';
 const record = (value: unknown): Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
 const finite = (value: unknown, fallback: number, min = 0, max = 1e9) => typeof value === 'number' && Number.isFinite(value) ? clamp(value, min, max) : fallback;
 
@@ -57,7 +60,7 @@ export class Progression {
     try { this.storage = storage ?? globalThis.localStorage; }
     catch { this.saveAvailable = false; this.loadWarning = 'unavailable'; return; }
     let raw: string | null;
-    try { raw = this.storage?.getItem(KEY) ?? null; }
+    try { raw = this.storage?.getItem(KEY) ?? this.storage?.getItem(LEGACY_KEY) ?? null; }
     catch { this.saveAvailable = false; this.loadWarning = 'unavailable'; return; }
     if (!raw) return;
     const data = this.decodeSave(raw);
@@ -191,7 +194,7 @@ export class Progression {
     const data = this.snapshot();
     try {
       if (!this.storage) throw new Error('Storage unavailable');
-      if (this.unreadableSave) { this.storage.setItem('harborline-save-recovery', this.unreadableSave); this.unreadableSave = null; }
+      if (this.unreadableSave) { this.storage.setItem(RECOVERY_KEY, this.unreadableSave); this.unreadableSave = null; }
       this.storage.setItem(KEY, JSON.stringify(data)); this.saveAvailable = true; this.lastSavedAt = Date.now(); return true;
     } catch { this.saveAvailable = false; return false; }
   }

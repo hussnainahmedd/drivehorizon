@@ -314,7 +314,7 @@ export class World {
     meshBox(this.group, mint, -37, 3.3, -190, 10, 6.4, 43);
     meshBox(this.group, roof, -30, 6.52, -188, 25, 0.3, 49);
     for (const z of [-211, -166]) meshBox(this.group, roof, -18, 3.3, z, 0.23, 6.5, 0.23);
-    this.sign('HARBORLINE', 'DISPATCH  /  SOUTH QUAY', -17.7, 5.65, -188, Math.PI / 2, 16);
+    this.sign('DRIVEHORIZON', 'DISPATCH  /  SOUTH QUAY', -17.7, 5.65, -188, Math.PI / 2, 16);
     this.colliders.add({ x: -37, z: -190, halfX: 5, halfZ: 21.5, kind: 'building' });
     this.buildingFootprints.push({ x: -37, z: -190, w: 10, d: 43 });
     for (let i = 0; i < 5; i++) meshBox(this.group, yellow, -25, 0.31, -211 + i * 10, 13, 0.025, 0.13);

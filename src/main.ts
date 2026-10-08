@@ -1,6 +1,6 @@
 import './style.css';
-import { Harborline } from './game';
+import { DriveHorizon } from './game';
 import { showFailure } from './graphics';
 
-try { new Harborline(); }
+try { new DriveHorizon(); }
 catch (error) { showFailure(error); }

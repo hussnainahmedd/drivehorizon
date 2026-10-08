@@ -11,15 +11,15 @@ const { GAME_URL, CSP, isGameURL, resolveGameAsset, trustedSender } = require('.
 
 test('desktop host resolves compiled assets locally without a localhost server', () => {
   const root = path.resolve('dist');
-  assert.equal(GAME_URL, 'harborline://app/index.html'); assert.ok(isGameURL(GAME_URL));
+  assert.equal(GAME_URL, 'drivehorizon://app/index.html'); assert.ok(isGameURL(GAME_URL));
   assert.deepEqual(resolveGameAsset(root, GAME_URL), { file: path.join(root, 'index.html'), type: 'text/html' });
-  assert.deepEqual(resolveGameAsset(root, 'harborline://app/assets/game.js'), { file: path.join(root, 'assets/game.js'), type: 'text/javascript' });
-  assert.equal(resolveGameAsset(root, 'harborline://app/favicon.svg').type, 'image/svg+xml');
+  assert.deepEqual(resolveGameAsset(root, 'drivehorizon://app/assets/game.js'), { file: path.join(root, 'assets/game.js'), type: 'text/javascript' });
+  assert.equal(resolveGameAsset(root, 'drivehorizon://app/favicon.svg').type, 'image/svg+xml');
 });
 
 test('desktop protocol rejects remote content, traversal, unexpected files and malformed URLs', () => {
   const root = path.resolve('dist');
-  for (const url of ['https://example.com/index.html', 'http://localhost:5173/', 'harborline://other/index.html', 'harborline://app/assets/%2e%2e%2f%2e%2e%2fsecret.js', 'harborline://app/assets/%5csecret.js', 'harborline://app/package.json', 'harborline://app/assets/secret.cjs', 'harborline://app/assets/%00.js', 'harborline://user@app/index.html', 'not a URL']) assert.equal(resolveGameAsset(root, url), null, url);
+  for (const url of ['https://example.com/index.html', 'http://localhost:5173/', 'drivehorizon://other/index.html', 'drivehorizon://app/assets/%2e%2e%2f%2e%2e%2fsecret.js', 'drivehorizon://app/assets/%5csecret.js', 'drivehorizon://app/package.json', 'drivehorizon://app/assets/secret.cjs', 'drivehorizon://app/assets/%00.js', 'drivehorizon://user@app/index.html', 'not a URL']) assert.equal(resolveGameAsset(root, url), null, url);
   assert.match(CSP, /script-src 'self'/); assert.ok(!CSP.includes('unsafe-eval'));
 });
 
@@ -62,20 +62,20 @@ test('desktop main-process wiring loads local production files, isolates the ren
     session: { defaultSession: { setPermissionRequestHandler: (handler: unknown) => permissions.push(handler), setPermissionCheckHandler: (handler: unknown) => permissions.push(handler) } },
   };
   const source = await readFile(new URL('../electron/main.cjs', import.meta.url), 'utf8');
-  new Script(source).runInNewContext({ require: (name: string) => name === 'electron' ? electron : name === './assets.cjs' ? require('../electron/assets.cjs') : require(name), __dirname: path.resolve('electron'), setTimeout, clearTimeout, Response, URL, console });
+  new Script(source).runInNewContext({ require: (name: string) => name === 'electron' ? electron : name.startsWith('./') ? require('../electron/' + name.slice(2)) : require(name), __dirname: path.resolve('electron'), process: { argv: [] }, setTimeout, clearTimeout, Response, URL, console });
   const window = await ready, event = { sender: window.webContents, senderFrame: window.webContents.mainFrame };
   try {
     assert.equal(window.webContents.mainFrame.url, GAME_URL); assert.equal(window.menu, null);
     assert.equal(window.options.webPreferences.nodeIntegration, false); assert.equal(window.options.webPreferences.contextIsolation, true); assert.equal(window.options.webPreferences.sandbox, true);
     assert.equal(window.webContents.popup!().action, 'deny'); assert.equal(permissions.length, 2);
-    const response = await protocols.get('harborline')!({ url: GAME_URL, method: 'GET' });
-    assert.equal(response.status, 200); assert.match(response.headers.get('content-security-policy')!, /script-src 'self'/); assert.match(await response.text(), /HARBORLINE/);
-    assert.equal((await protocols.get('harborline')!({ url: 'https://example.com', method: 'GET' })).status, 404);
-    assert.equal(handlers.get('harborline:fullscreen')!(event), true); assert.equal(window.fullscreen, true);
-    handlers.get('harborline:quit')!(event); assert.equal(window.closed, false); assert.deepEqual(window.webContents.messages, ['harborline:close-request']);
-    ipc.emit('harborline:close-ready', { sender: {}, senderFrame: {} }); assert.equal(window.closed, false);
-    ipc.emit('harborline:close-ready', event); assert.equal(window.closed, true);
-  } finally { handlers.get('harborline:quit')!(event); ipc.emit('harborline:close-ready', event); }
+    const response = await protocols.get('drivehorizon')!({ url: GAME_URL, method: 'GET' });
+    assert.equal(response.status, 200); assert.match(response.headers.get('content-security-policy')!, /script-src 'self'/); assert.match(await response.text(), /DRIVEHORIZON/);
+    assert.equal((await protocols.get('drivehorizon')!({ url: 'https://example.com', method: 'GET' })).status, 404);
+    assert.equal(handlers.get('drivehorizon:fullscreen')!(event), true); assert.equal(window.fullscreen, true);
+    handlers.get('drivehorizon:quit')!(event); assert.equal(window.closed, false); assert.deepEqual(window.webContents.messages, ['drivehorizon:close-request']);
+    ipc.emit('drivehorizon:close-ready', { sender: {}, senderFrame: {} }); assert.equal(window.closed, false);
+    ipc.emit('drivehorizon:close-ready', event); assert.equal(window.closed, true);
+  } finally { handlers.get('drivehorizon:quit')!(event); ipc.emit('drivehorizon:close-ready', event); }
 });
 
 test('isolated preload exposes narrow desktop controls and acknowledges close after save callbacks', async () => {
@@ -83,10 +83,10 @@ test('isolated preload exposes narrow desktop controls and acknowledges close af
   const sent: string[] = [];
   let exposed!: { platform: string; onClose: (callback: () => void) => () => void; quit: () => Promise<void> };
   const source = await readFile(new URL('../electron/preload.cjs', import.meta.url), 'utf8');
-  new Script(source).runInNewContext({ require: () => ({ ipcRenderer: ipc, contextBridge: { exposeInMainWorld: (name: string, bridge: typeof exposed) => { assert.equal(name, 'harborlineDesktop'); exposed = bridge; } } }) });
+  new Script(source).runInNewContext({ require: () => ({ ipcRenderer: ipc, contextBridge: { exposeInMainWorld: (name: string, bridge: typeof exposed) => { assert.equal(name, 'driveHorizonDesktop'); exposed = bridge; } } }) });
   assert.equal(exposed.platform, 'desktop'); assert.ok(!('ipcRenderer' in exposed)); assert.ok(!('require' in exposed));
   let saved = 0; const unsubscribe = exposed.onClose(() => saved++);
-  ipc.emit('harborline:close-request'); assert.equal(saved, 1); assert.deepEqual(sent, ['harborline:close-ready']);
-  unsubscribe(); ipc.emit('harborline:close-request'); assert.equal(saved, 1); assert.equal(sent.length, 2);
+  ipc.emit('drivehorizon:close-request'); assert.equal(saved, 1); assert.deepEqual(sent, ['drivehorizon:close-ready']);
+  unsubscribe(); ipc.emit('drivehorizon:close-request'); assert.equal(saved, 1); assert.equal(sent.length, 2);
   await exposed.quit();
 });
