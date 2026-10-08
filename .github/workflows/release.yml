@@ -4,6 +4,16 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'Completed build run whose artifacts should be published'
+        required: true
+        type: string
+      release_tag:
+        description: 'Existing tag to publish'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -11,6 +21,7 @@ permissions:
 jobs:
   build-windows:
     name: Windows x64
+    if: github.event_name == 'push'
     runs-on: windows-latest
     steps:
       - name: Check out tagged source
@@ -33,6 +44,7 @@ jobs:
 
   build-linux:
     name: Linux x64
+    if: github.event_name == 'push'
     runs-on: ubuntu-22.04
     steps:
       - name: Check out tagged source
@@ -55,6 +67,7 @@ jobs:
 
   publish:
     name: Publish GitHub Release
+    if: github.event_name == 'push'
     needs: [build-windows, build-linux]
     runs-on: ubuntu-latest
     steps:
@@ -81,13 +94,53 @@ jobs:
             release/windows/DriveHorizon-Windows-x64.zip
             release/linux/DriveHorizon-Linux-x64.AppImage
             release/linux/DriveHorizon-Linux-x64.deb
-            release/windows/*.blockmap
-            release/windows/*.yml
-            release/linux/*.yml
           )
           ((${#assets[@]} >= 4)) || { echo 'Expected four DriveHorizon desktop artifacts were not produced.' >&2; exit 1; }
           gh release create "$GITHUB_REF_NAME" "${assets[@]}" \
             --repo "$GITHUB_REPOSITORY" \
             --title "DriveHorizon $GITHUB_REF_NAME" \
+            --notes-file docs/RELEASE.md \
+            --verify-tag
+
+  publish-existing:
+    name: Publish recovered GitHub Release
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged source and release notes
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag }}
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: DriveHorizon-Windows-x64
+          path: release/windows
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: DriveHorizon-Linux-x64
+          path: release/linux
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+      - name: Publish verified artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          assets=(
+            release/windows/DriveHorizon-Setup-Windows-x64.exe
+            release/windows/DriveHorizon-Windows-x64.zip
+            release/linux/DriveHorizon-Linux-x64.AppImage
+            release/linux/DriveHorizon-Linux-x64.deb
+          )
+          for asset in "${assets[@]}"; do
+            test -s "$asset" || { echo "Missing or empty release asset: $asset" >&2; exit 1; }
+          done
+          gh release create "${{ inputs.release_tag }}" "${assets[@]}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "DriveHorizon ${{ inputs.release_tag }}" \
             --notes-file docs/RELEASE.md \
             --verify-tag
